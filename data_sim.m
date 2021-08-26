@@ -14,12 +14,18 @@ drone.x = [[0,5,3];[3,6,4];[10,4,2]];
 
 % Sound source
 sound.f = 44100; % Hz, rate at which sound.wave is played
-freq = 440; % Hz, for a pure tone
+freq = 1000; % Hz, for a pure tone
 sound.t = t_span(1):(1/sound.f):t_span(2);
 sound.p = sin(2*pi*freq * sound.t);
 
 % Microphones
 f_sample = 44100; % Hz
+
+fourier = struct;
+window = 0.25; % s
+fourier.window = ceil(window*f_sample);
+window_freq = 0.1; % s, how often fft is computed
+fourier.noverlap = floor((window-window_freq)*f_sample);
 
 mics(1).x = [0,0,0]; % m
 mics(2).x = [0,10,0];
@@ -55,6 +61,19 @@ for i_mic = 1:numel(mics)
     mics(i_mic).p = p_resampled;
 end
 
+% Extract signal
+for i_mic = 1:numel(mics)
+    mic = mics(i_mic);
+    [~,fs,ts,ps] = spectrogram(mic.p,fourier.window,fourier.noverlap,[],mic.f,'yaxis');
+    [fridge,~,lr] = tfridge(ps,fs);
+    
+    mics(i_mic).spect.t = ts;
+    mics(i_mic).spect.p = ps;
+    mics(i_mic).spect.fridge = fridge;
+    mics(i_mic).spect.lr = lr;
+
+end
+
 %% Plots
 % Signals
 figure
@@ -69,9 +88,20 @@ figure
 for i = 1:4
     mic = mics(i);
     subplot(2,2,i)
-    spectrogram(mic.p,[],[],[],mic.f,'yaxis')
-    ylim([0.42,0.48])
+    spectrogram(mic.p,fourier.window,fourier.noverlap,[],mic.f,'yaxis')
+    ylim(freq*[0.9,1.1]/1000)
 end
+
+figure
+for i = 1:4
+    mic = mics(i);
+    subplot(2,2,i)
+    yyaxis left
+    plot(mic.spect.t,mic.spect.fridge)
+    yyaxis right
+    plot(mic.spect.t,abs(mic.spect.p(mic.spect.lr)))
+end
+
 
 %% Helper Functions
 function x = drone_position(drone, t)
