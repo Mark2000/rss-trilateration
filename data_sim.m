@@ -9,22 +9,22 @@ I0 = 1e-12; % dB reference
 
 % Drone
 drone = struct;
-drone.t = [0,1,2];
+drone.t = [0,0.75,2];
 drone.x = [[0,5,3];[3,6,4];[10,4,2]];
 
 % Sound source
-sound.f = 44100; % Hz, rate at which sound.wave is played
+sound.f = 44100; % Hz, rate at which sound.wave is played (also used as sampling freq)
 freq = 1000; % Hz, for a pure tone
 sound.t = t_span(1):(1/sound.f):t_span(2);
 sound.p = sin(2*pi*freq * sound.t);
 
 % Microphones
-f_sample = 44100; % Hz
+f_sample = sound.f; % Hz
 
 fourier = struct;
 window = 0.25; % s
 fourier.window = ceil(window*f_sample);
-window_freq = 0.1; % s, how often fft is computed
+window_freq = 0.05; % s, how often fft is computed
 fourier.noverlap = floor((window-window_freq)*f_sample);
 
 mics(1).x = [0,0,0]; % m
@@ -82,6 +82,17 @@ hold on
 for mic = mics
     plot(mic.t,mic.p, '--')
 end
+xlabel("t [s]")
+ylabel("Sound Pressure")
+
+% System setup
+figure
+for mic = mics
+    plot3(mic.x(1),mic.x(2),mic.x(3),"bo", 'MarkerSize', 10)
+    hold on
+end
+path = drone_position(drone,linspace(t_span(1), t_span(2)));
+plot3(path(:,1),path(:,2),path(:,3),'.')
 
 % Spectrograms, hardcoded for 4 mics
 figure
@@ -89,6 +100,7 @@ for i = 1:4
     mic = mics(i);
     subplot(2,2,i)
     spectrogram(mic.p,fourier.window,fourier.noverlap,[],mic.f,'yaxis')
+    title("Mic " + i)
     ylim(freq*[0.9,1.1]/1000)
 end
 
@@ -96,10 +108,14 @@ figure
 for i = 1:4
     mic = mics(i);
     subplot(2,2,i)
+    title("Mic " + i)
+    xlabel("t [s]")
     yyaxis left
     plot(mic.spect.t,mic.spect.fridge)
+    ylabel("f [Hz]")
     yyaxis right
     plot(mic.spect.t,abs(mic.spect.p(mic.spect.lr)))
+    ylabel("Power")
 end
 
 
