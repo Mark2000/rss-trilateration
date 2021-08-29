@@ -61,17 +61,33 @@ for i_mic = 1:numel(mics)
     mics(i_mic).p = p_resampled;
 end
 
+gauss = 'a.*exp(-((x-b)./c).^2)';
+
 % Extract signal
 for i_mic = 1:numel(mics)
     mic = mics(i_mic);
     [~,fs,ts,ps] = spectrogram(mic.p,fourier.window,fourier.noverlap,[],mic.f,'yaxis');
-    [fridge,~,lr] = tfridge(ps,fs);
+    [fridge,iridge,lridge] = tfridge(ps,fs);
     
     mics(i_mic).spect.t = ts;
     mics(i_mic).spect.p = ps;
+    mics(i_mic).spect.f = fs;
     mics(i_mic).spect.fridge = fridge;
-    mics(i_mic).spect.lr = lr;
-
+    mics(i_mic).spect.iridge = iridge;
+    mics(i_mic).spect.lridge = lridge; % linear indices of p
+    
+    mics(i_mic).spect.pfit = zeros(size(ts));
+    mics(i_mic).spect.ffit = zeros(size(ts));
+    
+    for i = 1:length(ts)
+        halfwindow = 3;
+        span = (iridge(i)-3):(iridge(i)+3);
+        scale = ps(lridge(i));
+        f = fit(fs(span),ps(span,i)/scale,gauss,'StartPoint',[ps(lridge(i)),fridge(i),3]);
+        coeffs = coeffvalues(f);
+        mics(i_mic).spect.pfit(i) = coeffs(1)*scale;
+        mics(i_mic).spect.ffit(i) = coeffs(2);
+    end
 end
 
 %% Plots
@@ -111,10 +127,14 @@ for i = 1:4
     title("Mic " + i)
     xlabel("t [s]")
     yyaxis left
-    plot(mic.spect.t,mic.spect.fridge)
+    plot(mic.spect.t,mic.spect.ffit)
+    hold on
+    scatter(mic.spect.t,mic.spect.fridge,'.')
     ylabel("f [Hz]")
     yyaxis right
-    plot(mic.spect.t,abs(mic.spect.p(mic.spect.lr)))
+    plot(mic.spect.t,mic.spect.pfit)
+    hold on
+    scatter(mic.spect.t,abs(mic.spect.p(mic.spect.lridge)),'.')
     ylabel("Power")
 end
 
