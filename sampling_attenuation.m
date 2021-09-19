@@ -1,8 +1,8 @@
 figure("Name", "attenuation")
 x = linspace(-5,5,200);
-msize = 50
+msize = 50;
 
-colors = colororder
+colors = colororder;
 
 gauss = exp(-x.^2);
 plot(x,gauss,"Color",colors(1,:),'DisplayName',"Gaussian")
