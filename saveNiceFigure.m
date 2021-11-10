@@ -40,6 +40,6 @@ function saveNiceFigure(fig, dimensions, format, figureFolder, noResize)
         saveas(fig, strcat(figureFolder, filesep(), fileName), format);
     elseif (strcmp(format, 'png'))
         % Save the figure as a high-res PNG file
-        print(fig, strcat(figureFolder, filesep(), fileName), '-dpng', '-r300');
+        print(fig, strcat(figureFolder, filesep(), fileName), '-dpng', '-r600');
     end
 end
