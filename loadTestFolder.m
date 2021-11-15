@@ -16,6 +16,7 @@ for fname = files
     params = regexp(fname, exp,'names');
     paramnames = fieldnames(params);
     
+    trial = struct();
     for iparam = 1:length(paramnames)
         trial.(paramnames{iparam}) = str2num(params.(paramnames{iparam}));
     end
@@ -30,7 +31,7 @@ for fname = files
     
     for imic = 1:nmics
         fprintf("\tProcessing mic %.f of %.f\n",imic,nmics)
-        [I,F,T] = peakSignal(data(:,imic), varargin);
+        [I,F,T] = peakSignal(data(:,imic), varargin{:});
         if ~isfield(trial,'t')
             trial.t = T;
             trial.f = zeros(length(T),nmics);
@@ -47,3 +48,7 @@ for fname = files
         trials(end+1) = trial;
     end
 end
+
+%% Shuffle
+order = randperm(length(trials));
+trials = trials(order);

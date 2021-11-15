@@ -1,0 +1,13 @@
+function [layers, options] = buildNetwork(in,out,width,depth)
+
+layers = featureInputLayer(in);
+for ii = 1:depth-2
+    layers = [layers; fullyConnectedLayer(width); tanhLayer];
+end
+layers = [layers; fullyConnectedLayer(out); regressionLayer];
+
+options = trainingOptions('adam', ...
+                          'InitialLearnRate',1e-3, ...
+                          'MaxEpochs',1500, ...
+                          'Shuffle', 'every-epoch', ...
+                          'Plots','training-progress');

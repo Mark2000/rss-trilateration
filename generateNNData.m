@@ -1,4 +1,4 @@
-function data = generateNNData(trials,varargin)
+function varargout = generateNNData(trials,varargin)
 % Generates a training point from the mean of the trial if no N given, or
 % up to N points distributed across the trial if N given
 
@@ -12,28 +12,38 @@ N = p.Results.N;
 fname = p.Results.fname;
 outputs = p.Results.Outputs;
 
-data = [];
+X = [];
+Y = [];
 
 for trial = trials 
     if N
         for ii = floor(linspace(1,length(trial.t),min(N,length(trial.t))))
-            datapoint = trial.i(ii,:);
+            X = [X; trial.i(ii,:)];
+            ypoint = [];
             for output = outputs
-                datapoint = [datapoint, trial.(output)]
+                ypoint = [ypoint, trial.(output)];
             end
-            data = [data; datapoint];
+            Y = [Y; ypoint];
         end
     else
-        datapoint = mean(trial.i);
+        X = [X; mean(trial.i)];
+        ypoint = [];
         for output = outputs
-            datapoint = [datapoint, trial.(output)];
+            ypoint = [ypoint, trial.(output)];
         end
-        data = [data; datapoint];
+        Y = [Y; ypoint];
     end
 end
 
+if nargout == 1
+    varargout{1} = [X, Y];
+elseif nargout == 2
+    varargout{1} = X;
+    varargout{2} = Y;
+end
+
 if ~isempty(fname)
-    writematrix(data,fname);
+    writematrix([X, Y],fname);
 end
 end
 
