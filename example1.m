@@ -31,6 +31,10 @@ axis equal
 % fname = "x1_0_y1_4_x2_4_y2_4_x3_4_y3_0_z_2.20_trial_1.xlsx";
 % Lmove = loadTestFolder(datadir,fname,"fs",30000,"SignalRange",[480,520],"Plot",false);
 
+real = [0,0,linspace(0,4,15),4*ones(1,15),4,4,4,4,4;
+        4,4,4*ones(1,15),linspace(4,0,15),0,0,0,0,0;
+        2.2*ones(1,37)]';
+
 xL = generateNNData(Lmove,"Outputs",[],"N",inf);
 est = predict(net,xL);
 

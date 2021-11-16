@@ -5,8 +5,9 @@ function [v, fsource] = dopplerVelocity(f,x,mics)
         v = in(1:3);
         fsource = in(4);
         r = x - mics;
+        r = r./vecnorm(r,2,2);
         
-        err = fsource * c ./ (c + dot(v.*ones(length(r),1), r, 2)) - f';
+        err = f' - fsource * c ./ (c + dot(v.*ones(length(r),1), r, 2));
         out = sum(err.^2);
     end
 

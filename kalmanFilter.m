@@ -1,5 +1,4 @@
-function [xs, Ps] = kalmanFilter(t, zs, fs, mics)
-% TODO: add actual option for plotting
+function [xs, Ps] = kalmanFilter(t, zs, fs, mics, actual)
 dt = t(2)-t(1);
 
 % State transisition matrix F
@@ -25,13 +24,17 @@ Q(7:9,7:9) = Qs * sa^2;
 % Observation Matrix
 H = [1,0,0,0,0,0,0,0,0;
      0,0,0,1,0,0,0,0,0;
-     0,0,0,0,0,0,1,0,0;];
+     0,0,0,0,0,0,1,0,0;
+     0,1,0,0,0,0,0,0,0;
+     0,0,0,0,1,0,0,0,0;
+     0,0,0,0,0,0,0,1,0;];
  
 % Measurement Uncertainty
-sxm = 0.95;
-sym = 0.95;
+sxm = 0.9;
+sym = 0.9;
 szm = 0.5;
-R = eye(3) .* [sxm^2, sym^2, szm^2];
+sv = 0.2;
+R = eye(6) .* [sxm^2, sym^2, szm^2, sv^2, sv^2, sv^2];
 
 % Initialize
 x = zeros(9,1);
@@ -45,7 +48,8 @@ xs = zeros(length(t),length(x));
 Ps = zeros([length(t),size(P)]);
 for i = 1:length(zs)
     % Measure
-    z = zs(i,:)';
+    z = [zs(i,:)'; dopplerVelocity(fs(i,:),x([1,4,7])',mics)'];
+    
     K = P*H'/(H*P*H'+R);
     
     % Estimate
@@ -68,7 +72,7 @@ errorbar(xs(:,1),xs(:,4),Ps(:,1,1),Ps(:,1,1),Ps(:,4,4),Ps(:,4,4),':o');
 hold on
 plot(zs(:,1),zs(:,2),'.-')
 % plot(actual(:,1),actual(:,2),'s-')
-% quiver(actual(:,1),actual(:,2),xs(:,1)-actual(:,1),xs(:,4)-actual(:,2),1,"ShowArrowHead",'off')
+% quiver(actual(:,1),actual(:,2),xs(:,1)-actual(:,1),xs(:,4)-actual(:,2),0,"ShowArrowHead",'off')
 xlim([0,5])
 ylim([0,5])
 xlabel("x [m]")
@@ -79,7 +83,7 @@ errorbar(xs(:,1),xs(:,7),Ps(:,1,1),Ps(:,1,1),Ps(:,7,7),Ps(:,7,7),':o');
 hold on
 plot(zs(:,1),zs(:,3),'.-')
 % plot(actual(:,1),actual(:,3),'s-')
-% quiver(actual(:,1),actual(:,3),xs(:,1)-actual(:,1),xs(:,7)-actual(:,3),1,"ShowArrowHead",'off')
+% quiver(actual(:,1),actual(:,3),xs(:,1)-actual(:,1),xs(:,7)-actual(:,3),0,"ShowArrowHead",'off')
 xlim([0,5])
 xlabel("x [m]")
 ylabel("z [m]")
@@ -90,7 +94,7 @@ plot3(xs(:,1),xs(:,4),xs(:,7),':o');
 hold on
 plot3(zs(:,1),zs(:,2),zs(:,3),'.-')
 % plot3(actual(:,1),actual(:,2),actual(:,3),'s-')
-% quiver3(actual(:,1),actual(:,2),actual(:,3),xs(:,1)-actual(:,1),xs(:,4)-actual(:,2),xs(:,7)-actual(:,3),1,"ShowArrowHead",'off')
+% quiver3(actual(:,1),actual(:,2),actual(:,3),xs(:,1)-actual(:,1),xs(:,4)-actual(:,2),xs(:,7)-actual(:,3),0,"ShowArrowHead",'off')
 xlim([0,5])
 ylim([0,5])
 xlabel("x [m]")
